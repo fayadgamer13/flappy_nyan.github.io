@@ -118,3 +118,34 @@ avatarSelect.addEventListener('change', () => {
 
 resetGame();
 gameLoop();
+if (
+  bird.x < pipe.x + pipe.width &&
+  bird.x + bird.width > pipe.x &&
+  (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
+) {
+  gameOver = true;
+}
+if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+  score++;
+  pipe.passed = true;
+  console.log('Pipe passed, score:', score);
+}
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    bird.velocity = bird.lift;
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && !gameOver) {
+    bird.velocity = bird.lift;
+  }
+});
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Initial call
