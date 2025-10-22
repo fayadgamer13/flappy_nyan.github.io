@@ -1,43 +1,7 @@
-// --- Configuration & Assets ---
-const CANVAS = document.getElementById('game-canvas');
-const CTX = CANVAS.getContext('2d');
-const GAME_WIDTH = CANVAS.width;
-const GAME_HEIGHT = CANVAS.height;
-
-// Game State Variables
-let gameLoopInterval;
-let gameRunning = false;
-let currentScore = 0;
-let highScore = localStorage.getItem('flappyHighScore') || 0;
-
-// Player/Bird Configuration
-const PLAYER_SIZE = 40;
-let playerY = GAME_HEIGHT / 2;
-let playerVelocity = 0;
-const GRAVITY = 0.5;
-const JUMP_FORCE = -8;
-
-// Pipe Configuration
-const PIPE_WIDTH = 50;
-const PIPE_GAP = 120;
-const PIPE_SPEED = 3;
-let pipes = [];
-let frameCount = 0;
-const PIPE_SPAWN_RATE = 100; // Spawn a pipe every 100 frames (~2 seconds)
-
-// Asset Loading (Use your provided files)
-const assets = {
-    player: new Image(),
-    pipe: new Image(),
-    rarepipe: new Image(),
-    background: new Image(),
-    music: document.getElementById('game-music'),
-    // ... other images could be loaded here if needed for drawing on canvas
-};
-
-// Player Avatars (Used for selection and drawing)
-const PLAYER_ASSETS = {
-    'default': 'player.gif',
+// --- Game Assets and Configuration ---
+const ASSET_PATHS = {
+    // Player Avatars
+    'player1': 'player.gif',
     'player2': 'player2.gif',
     'player3': 'player3.webp',
     'player4': 'player4.webp',
@@ -47,273 +11,400 @@ const PLAYER_ASSETS = {
     'player8': 'player8.webp',
     'player9': 'player9.webp',
     'player10': 'player10.webp',
-    'player11': 'player11.webp'
+    'player11': 'player11.webp',
+    // Pipes
+    'pipe': 'pipe.png',
+    'rarepipe': 'rarepipe.png',
+    // Audio
+    'music': 'music.mp3',
+    'sfx_flap': 'sfx_flap.mp3', // Assume you have a flap sound
+    'sfx_hit': 'sfx_hit.mp3',   // Assume you have a hit sound
 };
 
-let currentAvatarKey = 'default';
+// --- Game State Variables ---
+let GAME_STATE = 'MENU'; // States: 'MENU', 'CUSTOMIZE', 'PLAYING', 'GAMEOVER'
+let bestScore = localStorage.getItem('flappyBestScore') ? parseInt(localStorage.getItem('flappyBestScore')) : 0;
+let currentScore = 0;
+let selectedAvatar = ASSET_PATHS['player1'];
+let gameLoopId;
+let pipeSpeed = 2; // Initial pipe speed
 
-// Set image sources and load initial player
-assets.player.src = PLAYER_ASSETS[currentAvatarKey];
-assets.pipe.src = 'pipe.png';
-assets.rarepipe.src = 'rarepipe.png';
-assets.background.src = 'background.png';
+// --- Canvas and Context ---
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const CANVAS_WIDTH = canvas.width;
+const CANVAS_HEIGHT = canvas.height;
 
-// --- DOM Elements ---
-const startMenu = document.getElementById('start-menu');
-const customizeMenu = document.getElementById('customize-menu');
-const gameOverMenu = document.getElementById('game-over-menu');
-const scoreOverlay = document.getElementById('score-overlay');
+// --- Player Object ---
+const player = {
+    x: 50,
+    y: CANVAS_HEIGHT / 2,
+    width: 40,
+    height: 40,
+    velocity: 0,
+    gravity: 0.25,
+    jumpStrength: -6,
+    img: new Image()
+};
 
-const highScoreDisplay = document.getElementById('high-score-display');
-const currentScoreDisplay = document.getElementById('current-score-display');
-const finalScoreDisplay = document.getElementById('final-score-display');
-const bestScoreDisplay = document.getElementById('best-score-display');
-const avatarSelection = document.getElementById('avatar-selection');
-const debugOutput = document.getElementById('debug-output');
+// --- Pipe Array ---
+let pipes = [];
+const PIPE_WIDTH = 52;
+const PIPE_GAP = 150;
+let pipeSpawnTimer = 0;
+const PIPE_SPAWN_INTERVAL = 90; // Frames
 
+// --- Assets Loading ---
+const assets = {};
+let assetsLoaded = 0;
+const totalAssets = Object.keys(ASSET_PATHS).length;
 
-// --- Utility Functions ---
-
-/** Logs a message to the in-game debug log. */
-function debugLog(message) {
-    console.log(`[DEBUG] ${message}`);
-    const time = new Date().toLocaleTimeString();
-    debugOutput.innerHTML = `<div>[${time}] ${message}</div>` + debugOutput.innerHTML;
-}
-
-/** Updates the high score and saves it to local storage. */
-function updateHighScore() {
-    if (currentScore > highScore) {
-        highScore = currentScore;
-        localStorage.setItem('flappyHighScore', highScore);
+function loadAssets() {
+    for (const key in ASSET_PATHS) {
+        assets[key] = new Image();
+        assets[key].onload = () => {
+            assetsLoaded++;
+            if (assetsLoaded === totalAssets) {
+                console.log('All assets loaded.');
+                // Initialize the player image once assets are ready
+                player.img.src = selectedAvatar;
+                // Start the game loop for the menu background animation (optional)
+                // draw();
+            }
+        };
+        assets[key].onerror = () => {
+            console.error(`Failed to load asset: ${ASSET_PATHS[key]}`);
+        };
+        // Load the asset. Note: Music needs special handling.
+        if (!key.startsWith('sfx_')) {
+            assets[key].src = ASSET_PATHS[key];
+        }
     }
-    highScoreDisplay.textContent = highScore;
-    bestScoreDisplay.textContent = highScore;
 }
 
-/** Hides all game screens/menus. */
-function hideAllScreens() {
-    startMenu.classList.add('hidden');
-    customizeMenu.classList.add('hidden');
-    gameOverMenu.classList.add('hidden');
-    scoreOverlay.classList.add('hidden');
+// --- Audio Handling ---
+const music = new Audio(ASSET_PATHS['music']);
+music.loop = true;
+let isMusicOn = true;
+
+function toggleMusic() {
+    if (isMusicOn) {
+        music.pause();
+        document.getElementById('music-toggle-button').textContent = 'Music: Off';
+    } else {
+        music.play().catch(e => console.log("Music play blocked by browser."));
+        document.getElementById('music-toggle-button').textContent = 'Music: On';
+    }
+    isMusicOn = !isMusicOn;
 }
 
-/** Switches to a specific screen/menu. */
-function showScreen(element) {
-    hideAllScreens();
-    element.classList.remove('hidden');
+function playSound(key) {
+    if (isMusicOn) { // Re-using isMusicOn for all sound toggle
+        const sound = new Audio(ASSET_PATHS[key]);
+        sound.play().catch(e => console.log(`Sound ${key} play failed.`));
+    }
 }
 
-/** Handles the bird's jump action. */
-function jump() {
-    if (!gameRunning) return;
-    playerVelocity = JUMP_FORCE;
-    debugLog("Jump!");
-}
+// --- Core Game Functions ---
 
-// --- Game Logic ---
-
-/** Resets the game state and starts the game loop. */
-function startGame() {
-    if (gameRunning) return;
-
-    // Reset state
-    playerY = GAME_HEIGHT / 2;
-    playerVelocity = 0;
+function initGame() {
+    player.y = CANVAS_HEIGHT / 2;
+    player.velocity = 0;
     pipes = [];
     currentScore = 0;
-    frameCount = 0;
-    gameRunning = true;
+    pipeSpeed = 2;
+    document.getElementById('score-display').textContent = currentScore;
 
-    // UI updates
-    showScreen(scoreOverlay);
-    currentScoreDisplay.textContent = currentScore;
-
-    // Start audio (requires user interaction first)
-    assets.music.play().catch(e => debugLog("Music autoplay blocked."));
-
-    // Start the loop
-    gameLoopInterval = setInterval(gameLoop, 1000 / 60); // 60 FPS
-    debugLog("Game Started.");
+    // Start a new game loop
+    if (gameLoopId) cancelAnimationFrame(gameLoopId);
+    gameLoopId = requestAnimationFrame(gameLoop);
 }
 
-/** Stops the game loop and shows the game over screen. */
-function gameOver() {
-    if (!gameRunning) return;
-    clearInterval(gameLoopInterval);
-    gameRunning = false;
-
-    // UI & Score updates
-    updateHighScore();
-    finalScoreDisplay.textContent = currentScore;
-    showScreen(gameOverMenu);
-
-    // Stop audio
-    assets.music.pause();
-    assets.music.currentTime = 0;
-
-    debugLog(`Game Over! Score: ${currentScore}`);
+function flap() {
+    if (GAME_STATE !== 'PLAYING') return;
+    player.velocity = player.jumpStrength;
+    playSound('sfx_flap');
 }
 
-/**
- * The main game loop function, called repeatedly.
- */
-function gameLoop() {
-    // 1. Clear the canvas (draw background)
-    CTX.drawImage(assets.background, 0, 0, GAME_WIDTH, GAME_HEIGHT);
+function update() {
+    if (GAME_STATE !== 'PLAYING') return;
 
-    // 2. Update and Draw Player
-    playerVelocity += GRAVITY;
-    playerY += playerVelocity;
+    // 1. Player Physics
+    player.velocity += player.gravity;
+    player.y += player.velocity;
 
-    // Draw the current player avatar
-    CTX.drawImage(assets.player, 50, playerY, PLAYER_SIZE, PLAYER_SIZE);
-
-    // 3. Generate Pipes
-    frameCount++;
-    if (frameCount % PIPE_SPAWN_RATE === 0) {
-        const pipeHeight = Math.floor(Math.random() * (GAME_HEIGHT - 2 * PIPE_GAP)) + PIPE_GAP / 2;
-        const isRare = Math.random() < 0.1; // 10% chance for rare pipe
-        pipes.push({
-            x: GAME_WIDTH,
-            y: pipeHeight, // Center of the gap
-            isPassed: false,
-            isRare: isRare
-        });
-        debugLog(`Pipe spawned. Rare: ${isRare}`);
+    // 2. Boundary Collision (Top)
+    if (player.y < 0) {
+        player.y = 0;
+        player.velocity = 0;
+    }
+    
+    // 3. Ground Collision (Game Over)
+    if (player.y + player.height > CANVAS_HEIGHT) {
+        gameOver();
+        return;
     }
 
-    // 4. Update, Draw, and Check Pipes
+    // 4. Pipe Management
+    pipeSpawnTimer++;
+    if (pipeSpawnTimer >= PIPE_SPAWN_INTERVAL) {
+        spawnPipe();
+        pipeSpawnTimer = 0;
+    }
+
+    // 5. Pipe Movement and Collision Check
     for (let i = pipes.length - 1; i >= 0; i--) {
-        let p = pipes[i];
-        p.x -= PIPE_SPEED;
+        const p = pipes[i];
+        p.x -= pipeSpeed;
 
-        const pipeAsset = p.isRare ? assets.rarepipe : assets.pipe;
-
-        // Draw top pipe
-        const topPipeHeight = p.y - PIPE_GAP / 2;
-        CTX.drawImage(pipeAsset, p.x, 0, PIPE_WIDTH, topPipeHeight);
-
-        // Draw bottom pipe (flipped, but using same image for simplicity)
-        const bottomPipeY = p.y + PIPE_GAP / 2;
-        const bottomPipeHeight = GAME_HEIGHT - bottomPipeY;
-        CTX.drawImage(pipeAsset, p.x, bottomPipeY, PIPE_WIDTH, bottomPipeHeight);
-
-        // Score Check
-        if (p.x + PIPE_WIDTH < 50 && !p.isPassed) {
-            currentScore += p.isRare ? 5 : 1; // Rare pipe gives more points
-            currentScoreDisplay.textContent = currentScore;
-            p.isPassed = true;
-            debugLog(`Scored! Current Score: ${currentScore}`);
+        // Collision Check (AABB)
+        const isColliding = checkCollision(player, p);
+        
+        if (isColliding) {
+            gameOver();
+            return;
         }
 
-        // Collision Check (Simple bounding box)
-        const playerX = 50;
-        const playerRight = playerX + PLAYER_SIZE;
-        const playerBottom = playerY + PLAYER_SIZE;
+        // Score Check
+        if (!p.scored && p.x + PIPE_WIDTH < player.x) {
+            currentScore++;
+            p.scored = true;
+            document.getElementById('score-display').textContent = currentScore;
 
-        if (playerRight > p.x && playerX < p.x + PIPE_WIDTH) { // X-overlap
-            if (playerY < topPipeHeight || playerBottom > bottomPipeY) { // Y-overlap
-                gameOver();
-                return; // Stop the loop execution immediately
+            // Optional: Increase difficulty
+            if (currentScore % 10 === 0) {
+                pipeSpeed += 0.5;
             }
         }
 
-        // Remove pipes that are off-screen
+        // Remove off-screen pipes
         if (p.x + PIPE_WIDTH < 0) {
             pipes.splice(i, 1);
         }
     }
-
-    // 5. Ground and Ceiling Collision
-    if (playerY + PLAYER_SIZE > GAME_HEIGHT || playerY < 0) {
-        gameOver();
-        return;
-    }
 }
 
-// --- Customization Menu Handlers ---
+function draw() {
+    // Clear the canvas
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    
+    // Draw background (or rely on CSS background-image)
+    // ctx.drawImage(assets['background'], 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-/** Renders the list of avatars in the customization menu. */
-function renderAvatars() {
-    avatarSelection.innerHTML = ''; // Clear previous options
-    Object.keys(PLAYER_ASSETS).forEach(key => {
+    // Draw pipes
+    pipes.forEach(p => {
+        const pipeImage = p.isRare ? assets['rarepipe'] : assets['pipe'];
+        
+        // Draw top pipe
+        ctx.save();
+        ctx.translate(p.x, p.y_top + p.height);
+        ctx.rotate(Math.PI); // Rotate 180 degrees
+        ctx.drawImage(pipeImage, -PIPE_WIDTH, 0, PIPE_WIDTH, p.height);
+        ctx.restore();
+
+        // Draw bottom pipe
+        ctx.drawImage(pipeImage, p.x, p.y_bottom, PIPE_WIDTH, CANVAS_HEIGHT - p.y_bottom);
+    });
+
+    // Draw player
+    ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
+}
+
+function gameLoop() {
+    if (GAME_STATE === 'PLAYING') {
+        update();
+    }
+    draw();
+
+    gameLoopId = requestAnimationFrame(gameLoop);
+}
+
+// --- Pipe Spawning and Collision ---
+
+function spawnPipe() {
+    // Random height for the gap center
+    const minY = 100 + PIPE_GAP / 2;
+    const maxY = CANVAS_HEIGHT - 100 - PIPE_GAP / 2;
+    const center = Math.random() * (maxY - minY) + minY;
+    
+    const topHeight = center - PIPE_GAP / 2;
+    const bottomY = center + PIPE_GAP / 2;
+
+    const isRare = Math.random() < 0.1; // 10% chance for a rare pipe
+
+    pipes.push({
+        x: CANVAS_WIDTH,
+        y_top: 0,
+        y_bottom: bottomY,
+        height: topHeight,
+        gap: PIPE_GAP,
+        scored: false,
+        isRare: isRare
+    });
+}
+
+function checkCollision(bird, pipe) {
+    const pipeTop = { x: pipe.x, y: pipe.y_top, width: PIPE_WIDTH, height: pipe.height };
+    const pipeBottom = { x: pipe.x, y: pipe.y_bottom, width: PIPE_WIDTH, height: CANVAS_HEIGHT - pipe.y_bottom };
+
+    // Check collision with top pipe
+    if (bird.x < pipeTop.x + pipeTop.width &&
+        bird.x + bird.width > pipeTop.x &&
+        bird.y < pipeTop.y + pipeTop.height &&
+        bird.y + bird.height > pipeTop.y) {
+        return true;
+    }
+
+    // Check collision with bottom pipe
+    if (bird.x < pipeBottom.x + pipeBottom.width &&
+        bird.x + bird.width > pipeBottom.x &&
+        bird.y < pipeBottom.y + pipeBottom.height &&
+        bird.y + bird.height > pipeBottom.y) {
+        return true;
+    }
+
+    return false;
+}
+
+function gameOver() {
+    GAME_STATE = 'GAMEOVER';
+    playSound('sfx_hit');
+    cancelAnimationFrame(gameLoopId);
+
+    // Update Best Score
+    if (currentScore > bestScore) {
+        bestScore = currentScore;
+        localStorage.setItem('flappyBestScore', bestScore);
+    }
+    
+    // Show Game Over Screen
+    document.getElementById('final-score').textContent = currentScore;
+    document.getElementById('best-score-gameover').textContent = bestScore;
+    document.getElementById('game-over-screen').classList.remove('hidden');
+}
+
+// --- Menu & Customization Handling ---
+
+function showScreen(screenId) {
+    document.querySelectorAll('.game-screen').forEach(screen => {
+        screen.classList.add('hidden');
+    });
+    // The canvas is never truly hidden, but the menu layers cover it.
+    document.getElementById(screenId).classList.remove('hidden');
+}
+
+function populateAvatarSelection() {
+    const avatarSelectionDiv = document.getElementById('avatar-selection');
+    avatarSelectionDiv.innerHTML = '';
+    
+    // List of avatar keys to display
+    const avatarKeys = Object.keys(ASSET_PATHS).filter(key => key.startsWith('player'));
+    
+    avatarKeys.forEach(key => {
+        const path = ASSET_PATHS[key];
         const img = document.createElement('img');
-        img.src = PLAYER_ASSETS[key];
+        img.src = path;
         img.classList.add('avatar-option');
-        img.dataset.key = key;
-
-        if (key === currentAvatarKey) {
+        img.dataset.path = path;
+        img.alt = key;
+        
+        if (path === selectedAvatar) {
             img.classList.add('selected');
         }
 
         img.addEventListener('click', () => {
-            selectAvatar(key);
+            // Update selected avatar
+            selectedAvatar = path;
+            player.img.src = path;
+            
+            // Update UI selection
+            document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
+            img.classList.add('selected');
+            
+            // Store selection (optional)
+            localStorage.setItem('flappyAvatar', path);
         });
 
-        avatarSelection.appendChild(img);
+        avatarSelectionDiv.appendChild(img);
     });
 }
 
-/** Sets the selected avatar. */
-function selectAvatar(key) {
-    currentAvatarKey = key;
-    assets.player.src = PLAYER_ASSETS[key];
-    localStorage.setItem('flappyAvatar', key);
+// --- Event Listeners ---
 
-    // Update selection highlight
-    document.querySelectorAll('.avatar-option').forEach(img => {
-        img.classList.remove('selected');
-        if (img.dataset.key === key) {
-            img.classList.add('selected');
-        }
-    });
-
-    debugLog(`Avatar set to: ${key}`);
-}
-
-// --- Initialization & Event Listeners ---
-
-// 1. Initial High Score Load
-highScoreDisplay.textContent = highScore;
-
-// 2. Initial Avatar Load
-const savedAvatar = localStorage.getItem('flappyAvatar');
-if (savedAvatar && PLAYER_ASSETS[savedAvatar]) {
-    selectAvatar(savedAvatar);
-} else {
-    // Rerun selection logic to ensure 'default' is highlighted
-    selectAvatar(currentAvatarKey);
-}
-
-// 3. Menu Button Listeners
-document.getElementById('play-button').addEventListener('click', startGame);
-document.getElementById('restart-button').addEventListener('click', startGame);
-
-document.getElementById('customize-button').addEventListener('click', () => {
-    renderAvatars(); // Render every time menu is opened
-    showScreen(customizeMenu);
-});
-
-document.getElementById('back-button').addEventListener('click', () => {
-    showScreen(startMenu);
-});
-
-document.getElementById('menu-button-from-gameover').addEventListener('click', () => {
-    showScreen(startMenu);
-});
-
-// 4. Game Input Listener (Jump)
+// Flap on Spacebar or Click
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-        e.preventDefault(); // Stop scrolling when pressing space
-        jump();
+    if (e.code === 'Space' || e.key === ' ' || e.key === 'w' || e.key === 'W') {
+        flap();
     }
 });
+canvas.addEventListener('click', flap);
 
-CANVAS.addEventListener('click', jump);
+// Start Menu Buttons
+document.getElementById('play-button').addEventListener('click', () => {
+    GAME_STATE = 'PLAYING';
+    showScreen('gameCanvas'); // This essentially just hides the menu
+    document.getElementById('score-board').classList.remove('hidden');
+    initGame();
+    if(isMusicOn) music.play().catch(e => console.log("Music play blocked by browser."));
+});
 
-// 5. Initial Screen Setup
-showScreen(startMenu);
-debugLog("Game initialized. Ready to Play!");
+document.getElementById('customize-button').addEventListener('click', () => {
+    GAME_STATE = 'CUSTOMIZE';
+    populateAvatarSelection();
+    showScreen('customize-menu');
+});
+
+document.getElementById('back-to-menu-button').addEventListener('click', () => {
+    GAME_STATE = 'MENU';
+    // Update best score on menu screen
+    document.getElementById('best-score-menu').textContent = bestScore;
+    showScreen('start-menu');
+});
+
+document.getElementById('music-toggle-button').addEventListener('click', toggleMusic);
+
+// Game Over Buttons
+document.getElementById('restart-button').addEventListener('click', () => {
+    GAME_STATE = 'PLAYING';
+    showScreen('gameCanvas');
+    initGame();
+    if(isMusicOn) music.play().catch(e => console.log("Music play blocked by browser."));
+});
+
+document.getElementById('back-to-start-button').addEventListener('click', () => {
+    GAME_STATE = 'MENU';
+    document.getElementById('best-score-menu').textContent = bestScore;
+    showScreen('start-menu');
+    music.pause();
+});
+
+// --- Initialization ---
+
+function main() {
+    // 1. Load best score from local storage
+    document.getElementById('best-score-menu').textContent = bestScore;
+    
+    // 2. Add score display element
+    const scoreBoard = document.createElement('div');
+    scoreBoard.id = 'score-board';
+    scoreBoard.innerHTML = 'Score: <span id="score-display">0</span> | Best: <span id="best-score-live">0</span>';
+    document.getElementById('game-container').appendChild(scoreBoard);
+
+    // 3. Load user's last selected avatar
+    const savedAvatar = localStorage.getItem('flappyAvatar');
+    if (savedAvatar) {
+        selectedAvatar = savedAvatar;
+    }
+    
+    // 4. Start loading all image and sound assets
+    loadAssets();
+    
+    // 5. Initial screen setup
+    showScreen('start-menu');
+    
+    // 6. Start the non-game loop for menu screen rendering/animations
+    // We run the gameLoop only to keep the canvas visible, it won't call 'update'
+    gameLoopId = requestAnimationFrame(gameLoop);
+}
+
+main();
