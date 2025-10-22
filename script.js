@@ -1,151 +1,129 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+canvas.width = 480;
+canvas.height = 640;
 
-const birdImg = new Image();
-const pipeImg = new Image();
-const easterEggPipeImg = new Image();
-const buttonImg = document.getElementById('musicButton');
-const bgMusic = document.getElementById('bgMusic');
-const avatarSelect = document.getElementById('avatarSelect');
+const startMenu = document.getElementById('start-menu');
+const customiseMenu = document.getElementById('customise-menu');
+const playBtn = document.getElementById('play-btn');
+const customiseBtn = document.getElementById('customise-btn');
+const backBtn = document.getElementById('back-btn');
+const bgMusic = document.getElementById('bg-music');
 
-let birdSrc = avatarSelect.value;
-birdImg.src = birdSrc;
-pipeImg.src = 'pipes.png';
-easterEggPipeImg.src = 'pipeseasteregg.png';
-
-let bird = { x: 50, y: 150, width: 40, height: 40, gravity: 0.6, lift: -10, velocity: 0 };
-let pipes = [];
+let avatar = 'player.gif';
 let score = 0;
-let gameOver = false;
+let bestScore = localStorage.getItem('bestScore') || 0;
+let gravity = 0.6;
+let velocity = 0;
+let birdY = canvas.height / 2;
+let pipes = [];
+let gameRunning = false;
 
-function resetGame() {
-  bird.y = 150;
-  bird.velocity = 0;
-  pipes = [];
-  score = 0;
-  gameOver = false;
-}
+const pipeImg = new Image();
+pipeImg.src = 'rarepipe.png';
+
+const pieImg = new Image();
+pieImg.src = 'pie.png';
 
 function drawBird() {
-  ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+  const birdImg = new Image();
+  birdImg.src = avatar;
+  ctx.drawImage(birdImg, 50, birdY, 40, 40);
 }
 
-function drawPipes() {
-  pipes.forEach(pipe => {
-    const img = pipe.isEasterEgg ? easterEggPipeImg : pipeImg;
-    ctx.drawImage(img, pipe.x, 0, pipe.width, pipe.top);
-    ctx.drawImage(img, pipe.x, canvas.height - pipe.bottom, pipe.width, pipe.bottom);
-  });
+function drawPipe(pipe) {
+  ctx.drawImage(pipeImg, pipe.x, pipe.y, 60, 400);
 }
 
 function drawScore() {
   ctx.fillStyle = '#fff';
   ctx.font = '24px Arial';
-  ctx.fillText(`Score: ${score}`, 10, 30);
+  ctx.fillText(`Score: ${score}`, 20, 30);
+  ctx.fillText(`Best: ${bestScore}`, 20, 60);
 }
 
-function updateBird() {
-  bird.velocity += bird.gravity;
-  bird.y += bird.velocity;
-
-  if (bird.y + bird.height > canvas.height || bird.y < 0) {
-    gameOver = true;
-  }
-}
-
-function updatePipes() {
-  if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
-    const gap = 120;
-    const top = Math.random() * (canvas.height - gap - 100) + 50;
-    const bottom = canvas.height - top - gap;
-    const isEasterEgg = Math.random() < 0.1;
-    pipes.push({ x: canvas.width, width: 50, top, bottom, isEasterEgg, passed: false });
-  }
-
-  pipes.forEach(pipe => {
-    pipe.x -= 2;
-
-    if (!pipe.passed && pipe.x + pipe.width < bird.x) {
-      score++;
-      pipe.passed = true;
-    }
-
-    if (
-      bird.x < pipe.x + pipe.width &&
-      bird.x + bird.width > pipe.x &&
-      (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
-    ) {
-      gameOver = true;
-    }
-  });
-
-  pipes = pipes.filter(pipe => pipe.x + pipe.width > 0);
+function resetGame() {
+  score = 0;
+  velocity = 0;
+  birdY = canvas.height / 2;
+  pipes = [];
 }
 
 function gameLoop() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawBird();
-  drawPipes();
-  drawScore();
-  updateBird();
-  updatePipes();
+  if (!gameRunning) return;
 
-  if (gameOver) {
-    resetGame();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  velocity += gravity;
+  birdY += velocity;
+
+  if (birdY + 40 > canvas.height || birdY < 0) {
+    gameRunning = false;
+    startMenu.classList.remove('hidden');
+    canvas.classList.add('hidden');
+    if (score > bestScore) {
+      bestScore = score;
+      localStorage.setItem('bestScore', bestScore);
+    }
+    return;
   }
 
+  if (Math.random() < 0.02) {
+    const gap = 150;
+    const topY = Math.random() * -200;
+    pipes.push({ x: canvas.width, y: topY });
+  }
+
+  pipes.forEach((pipe, index) => {
+    pipe.x -= 2;
+    drawPipe(pipe);
+
+    if (pipe.x + 60 < 0) {
+      pipes.splice(index, 1);
+      score++;
+    }
+
+    if (
+      50 < pipe.x + 60 &&
+      90 > pipe.x &&
+      (birdY < pipe.y + 400 || birdY + 40 > pipe.y + 400 + 150)
+    ) {
+      gameRunning = false;
+    }
+  });
+
+  drawBird();
+  drawScore();
   requestAnimationFrame(gameLoop);
 }
 
 canvas.addEventListener('click', () => {
-  bird.velocity = bird.lift;
+  velocity = -10;
 });
 
-buttonImg.addEventListener('click', () => {
-  if (bgMusic.paused) {
-    bgMusic.play();
-    buttonImg.src = 'buttonpressed.png';
-  } else {
-    bgMusic.pause();
-    buttonImg.src = 'button.png';
-  }
+playBtn.addEventListener('click', () => {
+  startMenu.classList.add('hidden');
+  canvas.classList.remove('hidden');
+  bgMusic.play();
+  resetGame();
+  gameRunning = true;
+  gameLoop();
 });
 
-avatarSelect.addEventListener('change', () => {
-  birdSrc = avatarSelect.value;
-  birdImg.src = birdSrc;
+customiseBtn.addEventListener('click', () => {
+  startMenu.classList.add('hidden');
+  customiseMenu.classList.remove('hidden');
 });
 
-resetGame();
-gameLoop();
-if (
-  bird.x < pipe.x + pipe.width &&
-  bird.x + bird.width > pipe.x &&
-  (bird.y < pipe.top || bird.y + bird.height > canvas.height - pipe.bottom)
-) {
-  gameOver = true;
-}
-if (!pipe.passed && pipe.x + pipe.width < bird.x) {
-  score++;
-  pipe.passed = true;
-  console.log('Pipe passed, score:', score);
-}
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space') {
-    bird.velocity = bird.lift;
-  }
+backBtn.addEventListener('click', () => {
+  customiseMenu.classList.add('hidden');
+  startMenu.classList.remove('hidden');
 });
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && !gameOver) {
-    bird.velocity = bird.lift;
-  }
-});
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
 
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas(); // Initial call
+document.querySelectorAll('.avatar-grid img').forEach(img => {
+  img.addEventListener('click', () => {
+    document.querySelectorAll('.avatar-grid img').forEach(i => i.classList.remove('selected'));
+    img.classList.add('selected');
+    avatar = img.dataset.avatar;
+  });
+});

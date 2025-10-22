@@ -1,22 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flappy Bird</title>
-  <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Clone</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
-  <div class="controls">
-    <img id="musicButton" src="button.png" alt="Play Music" />
-    <select id="avatarSelect">
-      <option value="bird.gif">Bird 1</option>
-      <option value="bird2.gif">Bird 2</option>
-    </select>
-  </div>
-  <audio id="bgMusic" src="music.mp3"></audio>
-  <script src="script.js"></script>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="500" height="700"></canvas>
+    </div>
+
+    <audio id="gameMusic" src="music.mp3" loop></audio>
+
+    <script src="script.js"></script>
 </body>
 </html>
-<canvas id="gameCanvas"></canvas>

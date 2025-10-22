@@ -1,43 +1,23 @@
 body {
-  align-items: center;
-  font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #333; /* Dark background for contrast */
+    font-family: Arial, sans-serif;
+    overflow: hidden; /* Hide scrollbars */
 }
 
-canvas {
-  border: 2px solid #333;
-  background: url('background.png') no-repeat center center;
-  background-size: cover;
+#game-container {
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    border: 5px solid #000;
+    position: relative;
+    /* The canvas inside will fill this container */
 }
 
-.controls {
-  margin-top: 10px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-#musicButton {
-  width: 50px;
-  cursor: pointer;
-}
-
-#avatarSelect {
-  padding: 5px;
-  font-size: 16px;
-}
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  height: 100%;
-  width: 100%;
-}
-
-canvas {
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: url('background.png') no-repeat center center;
-  background-size: cover;
+#gameCanvas {
+    /* Dimensions are set in index.html (500x700) */
+    background-color: #70c5ce; /* Default sky color */
+    display: block;
 }
