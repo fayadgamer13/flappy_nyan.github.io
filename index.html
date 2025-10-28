@@ -1,48 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Bird Clone</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flappy Nyan</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="game-container">
-        <canvas id="gameCanvas" width="500" height="700"></canvas>
-
-        <div id="start-menu" class="game-screen">
-            <img id="title-img" src="title.png" alt="Flappy Bird Title">
-            <button id="play-button" aria-label="Start Game">
-                <img src="play.png" alt="Play Button">
-            </button>
-            <button id="customize-button" class="menu-button">Customize</button>
-            <div id="score-display-menu">
-                Best: <span id="best-score-menu">0</span>
-            </div>
-            <button id="music-toggle-button" class="menu-button">Music: On</button>
-        </div>
-
-        <div id="customize-menu" class="game-screen hidden">
-            <h2>Choose Your Bird</h2>
-            <div id="avatar-selection">
-                </div>
-            <button id="back-to-menu-button" class="menu-button">Back to Menu</button>
-        </div>
-
-        <div id="game-over-screen" class="game-screen hidden">
-            <h2>Game Over!</h2>
-            <p>Score: <span id="final-score">0</span></p>
-            <p>Best: <span id="best-score-gameover">0</span></p>
-            <button id="restart-button" class="menu-button">Play Again</button>
-            <button id="back-to-start-button" class="menu-button">Menu</button>
-        </div>
-
-        <div id="debug-log-container" class="hidden">
-            <img src="debuglog.png" alt="Debug Log" id="debug-log-icon">
-            <div id="debug-info"></div>
-        </div>
+  <div id="menu">
+    <img id="title" src="title.png" alt="Title" />
+    <div id="avatar-select">
+      <p>Select your avatar:</p>
+      <div id="avatars"></div>
     </div>
+    <img id="play-btn" src="play.png" alt="Play" />
+    <button id="music-toggle">Music Off</button>
+  </div>
 
-    <script src="script.js"></script>
+  <canvas id="gameCanvas"></canvas>
+
+  <audio id="bg-music" src="music.mp3" loop></audio>
+
+  <script src="script.js"></script>
 </body>
 </html>
