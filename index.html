@@ -7,6 +7,7 @@
   <style>
     :root{--accent:#ffcc00;--muted:#cfcfcf}
     html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;background:#0a0e27}
+    html.dark-mode,html.dark-mode body{background:#1a1a2e}
     *{box-sizing:border-box}
     #app{position:relative;height:100vh;overflow:hidden}
     canvas{display:block;background:transparent;width:100%;height:100%}
@@ -57,6 +58,13 @@
     select,input[type=checkbox]{padding:8px 12px;border-radius:8px;border:2px solid #ddd;font-size:14px;cursor:pointer;transition:border-color 0.2s}
     select:focus,input[type=checkbox]:focus{border-color:var(--accent);outline:none}
     input[type=checkbox]{width:24px;height:24px;cursor:pointer}
+
+    html.dark-mode .panel{background:linear-gradient(135deg,#2a2a3e 0%,#1f1f35 100%)}
+    html.dark-mode .panel h2,html.dark-mode .panel h3,html.dark-mode label{color:#fff}
+    html.dark-mode .settings-group{background:#3a3a50}
+    html.dark-mode .item{background:#3a3a50;color:#fff;border-color:#555}
+    html.dark-mode .item label{color:#ccc}
+    html.dark-mode select,html.dark-mode input[type=checkbox]{background:#3a3a50;color:#fff;border-color:#555}
 
     .back-btn{align-self:center;margin-top:20px}
 
@@ -151,6 +159,9 @@
           <label>Music
             <input id="musicToggle" type="checkbox" checked />
           </label>
+          <label>Dark Mode
+            <input id="darkModeToggle" type="checkbox" />
+          </label>
           <label>Language
             <select id="language"></select>
           </label>
@@ -174,7 +185,7 @@
     let selectedPlayer = localStorage.getItem(KEYS.selPlayer) || 'Assets/Images/Players/player.gif';
     let selectedBg = localStorage.getItem(KEYS.selBg) || 'Assets/Images/background.png';
     let bestScore = read(KEYS.best, 0);
-    let settings = read(KEYS.settings, {quality:'medium', music:true, language:'english'});
+    let settings = read(KEYS.settings, {quality:'medium', music:true, darkMode:false, language:'english'});
     let gameStarted = false;
     let gamePaused = false;
 
@@ -204,6 +215,7 @@
     const settingsBack = document.getElementById('settingsBack');
     const qualitySel = document.getElementById('quality');
     const musicToggle = document.getElementById('musicToggle');
+    const darkModeToggle = document.getElementById('darkModeToggle');
     const languageSel = document.getElementById('language');
     const reportBtn = document.getElementById('reportBtn');
     const bgMusic = document.getElementById('bgMusic');
@@ -411,7 +423,8 @@
     function openSettings(){ 
       document.getElementById('settings').classList.remove('hidden'); 
       qualitySel.value = settings.quality; 
-      musicToggle.checked = settings.music; 
+      musicToggle.checked = settings.music;
+      darkModeToggle.checked = settings.darkMode;
       languageSel.innerHTML=''; 
       languages.forEach(l=>{ 
         const o = document.createElement('option'); 
@@ -424,6 +437,7 @@
 
     qualitySel.addEventListener('change', ()=>{ settings.quality = qualitySel.value; write(KEYS.settings, settings) });
     musicToggle.addEventListener('change', ()=>{ settings.music = musicToggle.checked; write(KEYS.settings, settings); if(settings.music) bgMusic.play().catch(()=>{}); else bgMusic.pause() });
+    darkModeToggle.addEventListener('change', ()=>{ settings.darkMode = darkModeToggle.checked; write(KEYS.settings, settings); if(darkModeToggle.checked) document.documentElement.classList.add('dark-mode'); else document.documentElement.classList.remove('dark-mode'); });
     languageSel.addEventListener('change', ()=>{ settings.language = languageSel.value; write(KEYS.settings, settings) });
     reportBtn.addEventListener('click', ()=>{ window.location.href = 'mailto:wadifayad@gmail.com?subject=Flappy%20Nyan%20-%20Bug%20Report'; });
 
@@ -439,6 +453,7 @@
     gameStarted = false; 
     localStorage.setItem(KEYS.selPlayer, selectedPlayer); 
     localStorage.setItem(KEYS.selBg, selectedBg);
+    if(settings.darkMode) document.documentElement.classList.add('dark-mode');
     
     [...playerFiles, ...bgFiles, 'Assets/Images/pipes.png','Assets/Images/pipesrare.png','Assets/Images/floor.png','Assets/Images/coin.png','Assets/Images/error.svg','Assets/Images/pauseicon.png','Assets/Images/playicon.png','Assets/Images/storeicon.png','Assets/Images/settings.png','Assets/Images/title.png'].forEach(p=>{ const i=new Image(); i.src=p; i.onerror=()=>{} })
 
