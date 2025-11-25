@@ -14,7 +14,7 @@ Flappy Nyan is a familiar, yet unique, clone of the popular game *Flappy Bird*.
 * **Objective:** Guide the Nyan Cat through the gaps in the pipes without hitting them.
 * **Controls:** Tap or click anywhere on the screen to make the player (Nyan Cat) jump.
 * **Game Over:** You lose if the player falls to the ground or touches any of the pipes.
-* **Special Feature:** Score **30 points** to unlock the option to **buy a new player**!
+* **Special Feature:** Score **10 points** to unlock the option to **buy a new player**!
 
 ---
 
@@ -40,3 +40,4 @@ You may occasionally encounter **pink and black glitches**. This visual artifact
 * **Failing to Load:** A temporary loading error has occurred.
 
 Thank you for playing and helping to make this game better!
+
