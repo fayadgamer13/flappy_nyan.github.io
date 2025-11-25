@@ -5,12 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Flappy Nyan</title>
   <style>
+    @font-face{
+      font-family:'CustomFont';
+      src:url('Assets/Fonts/font.otf') format('opentype');
+    }
     :root{--accent:#ffcc00;--muted:#cfcfcf}
-    html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;background:#0a0e27}
-    html.dark-mode,html.dark-mode body{background:#1a1a2e}
+    html,body{height:100%;margin:0;font-family:'CustomFont',Arial,Helvetica,sans-serif;background:#1a1a2e;cursor:url('Assets/Images/cursor.cur'),auto}
     *{box-sizing:border-box}
-    #app{position:relative;height:100vh;overflow:hidden}
-    canvas{display:block;background:transparent;width:100%;height:100%}
+    #app{position:relative;height:100vh;overflow:hidden;max-width:100%;max-height:100vh}
+    canvas{display:block;background:transparent;width:100%;height:100%;max-width:100%;max-height:100vh}
 
     /* Main Menu Overlay */
     .overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:auto;z-index:50}
@@ -42,29 +45,25 @@
     button:active{transform:translateY(0)}
 
     /* Store & Settings */
-    .panel{position:absolute;inset:0;padding:20px;display:flex;flex-direction:column;background:linear-gradient(135deg,#f5f7ff 0%,#e8ecf8 100%);overflow-y:auto;z-index:50}
-    .panel h2{position:relative;align-self:center;margin:0 0 10px 0;font-size:28px;color:#0a0e27}
-    .panel h3{margin:15px 0 10px 0;color:#0a0e27;font-size:18px}
+    .panel{position:absolute;inset:0;padding:20px;display:flex;flex-direction:column;background:linear-gradient(135deg,#2a2a3e 0%,#1f1f35 100%);overflow-y:auto;z-index:50}
+    .panel h2{position:relative;align-self:center;margin:0 0 10px 0;font-size:clamp(20px,5vw,28px);color:#fff}
+    .panel h3{margin:15px 0 10px 0;color:#fff;font-size:clamp(14px,4vw,18px)}
     .wallet{margin:10px 0 20px 0;font-weight:bold;font-size:18px;color:#ff006b}
     .grid{display:flex;flex-wrap:wrap;gap:12px;overflow-y:auto;padding:8px;max-width:100%;border-radius:10px}
-    .item{width:100px;background:#fff;border-radius:12px;padding:10px;text-align:center;cursor:pointer;border:3px solid #ddd;transition:all 0.2s;flex-shrink:0}
+    .item{width:clamp(75px,15vw,100px);background:#3a3a50;border-radius:12px;padding:10px;text-align:center;cursor:pointer;border:3px solid #555;transition:all 0.2s;flex-shrink:0;color:#fff}
     .item:hover{border-color:var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.1)}
-    .item.selected{border-color:#ff006b;background:#fff5ff;box-shadow:0 0 16px rgba(255,0,107,0.3)}
+    .item.selected{border-color:#ff006b;background:#555;box-shadow:0 0 16px rgba(255,0,107,0.3)}
     .item img{width:70px;height:70px;object-fit:contain;margin-bottom:6px}
-    .item label{font-size:12px;color:#666;margin:0}
+    .item label{font-size:12px;color:#ccc;margin:0}
 
-    .settings-group{margin:15px 0;padding:12px;background:#fff;border-radius:10px}
-    label{display:flex;justify-content:space-between;align-items:center;margin:12px 0;padding:0 8px;font-weight:500;color:#0a0e27}
-    select,input[type=checkbox]{padding:8px 12px;border-radius:8px;border:2px solid #ddd;font-size:14px;cursor:pointer;transition:border-color 0.2s}
+    .settings-group{margin:15px 0;padding:12px;background:#3a3a50;border-radius:10px}
+    label{display:flex;justify-content:space-between;align-items:center;margin:12px 0;padding:0 8px;font-weight:500;color:#fff;font-size:clamp(12px,3vw,16px)}
+    select,input[type=checkbox]{padding:8px 12px;border-radius:8px;border:2px solid #555;font-size:14px;cursor:pointer;transition:border-color 0.2s;background:#3a3a50;color:#fff}
     select:focus,input[type=checkbox]:focus{border-color:var(--accent);outline:none}
     input[type=checkbox]{width:24px;height:24px;cursor:pointer}
 
-    html.dark-mode .panel{background:linear-gradient(135deg,#2a2a3e 0%,#1f1f35 100%)}
-    html.dark-mode .panel h2,html.dark-mode .panel h3,html.dark-mode label{color:#fff}
-    html.dark-mode .settings-group{background:#3a3a50}
-    html.dark-mode .item{background:#3a3a50;color:#fff;border-color:#555}
-    html.dark-mode .item label{color:#ccc}
-    html.dark-mode select,html.dark-mode input[type=checkbox]{background:#3a3a50;color:#fff;border-color:#555}
+    #promoSection{background:#3a3a50!important}
+    #promoInput,input[type=text]{background:#2a2a3e;color:#fff;border-color:#555!important}
 
     .back-btn{align-self:center;margin-top:20px}
 
@@ -98,53 +97,59 @@
     </div>
 
     <!-- Game HUD -->
-    <div id="hud" class="hud hidden">
-      <span id="coinsHUD" style="position:absolute;right:70px">💰 <span id="coinsCount">0</span></span>
+    <div id="hud" class="hud hidden" style="display:flex;gap:30px;justify-content:center">
       <span>Score: <span id="score">0</span></span>
+      <span id="coinsHUD"><img src="Assets/Images/coin.png" alt="Coins" onerror="this.src='Assets/Images/error.svg'" style="width:24px;height:24px;vertical-align:middle;margin-right:6px"> <span id="coinsCount">0</span></span>
     </div>
     <img id="pauseBtn" class="pause-btn hidden" src="Assets/Images/pauseicon.png" alt="Pause" onerror="this.src='Assets/Images/error.svg'" style="cursor:pointer">
 
     <!-- Pause Modal -->
     <div id="pauseModal" class="modal hidden">
-      <div class="card">
-        <h2>⏸️ Paused</h2>
-        <div class="row">
-          <button id="continueBtn">▶️ Continue</button>
-          <button id="pauseHomeBtn">🏠 Home</button>
+      <div style="position:relative;width:350px;background:url('Assets/Images/dialog.png');background-size:contain;background-repeat:no-repeat;background-position:center;padding:60px 30px 30px 30px;border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);min-height:200px;display:flex;flex-direction:column;justify-content:center">
+        <h2 style="margin:0 0 20px 0;font-size:24px;color:#fff">Paused</h2>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button id="continueBtn" style="background:none;border:none;padding:0;min-width:auto;position:relative;width:120px;height:50px"><img src="Assets/Images/button.png" alt="Continue" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;pointer-events:none">Continue</span></button>
+          <button id="pauseHomeBtn" style="background:none;border:none;padding:0;min-width:auto"><img src="Assets/Images/homeicon.png" alt="Home" onerror="this.src='Assets/Images/error.svg'" style="width:60px;height:60px;cursor:pointer"></button>
         </div>
       </div>
     </div>
 
     <!-- Try Again Modal -->
     <div id="tryAgain" class="modal hidden">
-      <div class="card">
-        <h2>Game Over</h2>
-        <div style="margin-top:20px;font-size:18px;color:#333">
-          <div style="margin:12px 0">Score: <strong style="color:#ff006b;font-size:22px" id="lastScore">0</strong></div>
-          <div style="margin:12px 0">Best: <strong style="color:#5ad;font-size:22px" id="bestScore">0</strong></div>
-          <div style="margin:12px 0">Coins Earned: <strong style="color:#ffcc00;font-size:22px" id="runCoins">0</strong></div>
+      <div style="position:relative;width:350px;background:url('Assets/Images/dialog.png');background-size:contain;background-repeat:no-repeat;background-position:center;padding:60px 30px 30px 30px;border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);min-height:280px;display:flex;flex-direction:column;justify-content:center">
+        <h2 style="margin:0 0 20px 0;font-size:24px;color:#fff">Game Over</h2>
+        <div style="margin-bottom:20px;font-size:16px;color:#fff">
+          <div style="margin:12px 0">Score: <strong style="color:#ffcc00;font-size:20px" id="lastScore">0</strong></div>
+          <div style="margin:12px 0">Best: <strong style="color:#ffcc00;font-size:20px" id="bestScore">0</strong></div>
+          <div style="margin:12px 0">Coins Earned: <strong style="color:#ffcc00;font-size:20px" id="runCoins">0</strong></div>
         </div>
-        <div class="row">
-          <button id="retryBtn">🔄 Try Again</button>
-          <button id="homeBtn">🏠 Home</button>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button id="retryBtn" style="background:none;border:none;padding:0;min-width:auto"><img src="Assets/Images/tryagainicon.png" alt="Try Again" onerror="this.src='Assets/Images/error.svg'" style="width:80px;height:80px;cursor:pointer"></button>
+          <button id="homeBtn" style="background:none;border:none;padding:0;min-width:auto"><img src="Assets/Images/homeicon.png" alt="Home" onerror="this.src='Assets/Images/error.svg'" style="width:80px;height:80px;cursor:pointer"></button>
         </div>
       </div>
     </div>
 
-    <!-- Store -->
+        <!-- Store -->
     <div id="store" class="overlay hidden" style="pointer-events:none">
       <div class="panel" style="pointer-events:auto">
         <h2>🛍️ Store</h2>
         <div class="wallet">💰 Coins: <span id="wallet">0</span></div>
+        <div id="promoSection" style="margin:15px 0;padding:12px;background:#fff;border-radius:10px;border-left:4px solid #ff006b">
+          <h3 style="margin-top:0">🎟️ Promo Code</h3>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <input id="promoInput" type="text" placeholder="Enter promo code" style="flex:1;padding:8px;border-radius:8px;border:2px solid #ddd">
+            <button id="promoBtn" style="background:none;border:none;padding:0;cursor:pointer;width:80px;height:40px;position:relative"><img src="Assets/Images/button.png" alt="Redeem" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;font-size:12px;pointer-events:none">Redeem</span></button>
+          </div>
+          <div id="promoMsg" style="font-size:12px;color:#666;min-height:20px"></div>
+        </div>
         <h3>Players (6N = WebP, Standard = PNG)</h3>
         <div id="playersGrid" class="grid" style="max-height:35vh"></div>
         <h3>Backgrounds</h3>
         <div id="bgsGrid" class="grid" style="max-height:25vh"></div>
-        <button class="back-btn" id="storeBack">← Back to Menu</button>
+        <button class="back-btn" id="storeBack" style="background:none;border:none;padding:0;cursor:pointer;width:120px;height:50px;align-self:center;position:relative"><img src="Assets/Images/button.png" alt="Back" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;pointer-events:none">Back</span></button>
       </div>
-    </div>
-
-    <!-- Settings -->
+    </div>    <!-- Settings -->
     <div id="settings" class="overlay hidden" style="pointer-events:none">
       <div class="panel" style="pointer-events:auto">
         <h2>⚙️ Settings</h2>
@@ -159,15 +164,22 @@
           <label>Music
             <input id="musicToggle" type="checkbox" checked />
           </label>
-          <label>Dark Mode
-            <input id="darkModeToggle" type="checkbox" />
-          </label>
           <label>Language
             <select id="language"></select>
           </label>
         </div>
-        <button class="back-btn" id="reportBtn">📧 Report a Problem</button>
-        <button class="back-btn" id="settingsBack">← Back to Menu</button>
+        <button class="back-btn" id="reportBtn" style="background:none;border:none;padding:0;cursor:pointer;width:120px;height:50px;align-self:center;margin-top:20px;position:relative"><img src="Assets/Images/button.png" alt="Report" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;font-size:12px;pointer-events:none">Report</span></button>
+        <button class="back-btn" id="resetBtn" style="background:none;border:none;padding:0;cursor:pointer;width:120px;height:50px;align-self:center;position:relative;margin-top:10px"><img src="Assets/Images/button.png" alt="Reset" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;font-size:12px;pointer-events:none">Reset</span></button>
+        <button class="back-btn" id="githubBtn" style="background:none;border:none;padding:0;cursor:pointer;width:140px;height:50px;align-self:center;position:relative;margin-top:10px;display:flex;align-items:center;justify-content:center;z-index:2"><img src="Assets/Images/button.png" alt="GitHub" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer;position:absolute"><div style="position:relative;z-index:1;display:flex;align-items:center;gap:6px;color:#fff;font-weight:bold;font-size:12px;pointer-events:auto"><img src="Assets/Images/favicongithub.png" alt="GitHub" style="width:16px;height:16px" onerror="this.style.display='none'">Visit on GitHub</div></button>
+        <button class="back-btn" id="settingsBack" style="background:none;border:none;padding:0;cursor:pointer;width:120px;height:50px;align-self:center;position:relative;margin-top:10px"><img src="Assets/Images/button.png" alt="Back" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;pointer-events:none">Back</span></button>
+      </div>
+    </div>
+
+    <!-- Custom Dialog -->
+    <div id="customDialog" class="modal hidden">
+      <div style="position:relative;width:300px;background:url('Assets/Images/dialog.png');background-size:contain;background-repeat:no-repeat;background-position:center;padding:60px 30px 30px 30px;border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);min-height:200px;display:flex;flex-direction:column;justify-content:center">
+        <p id="dialogMsg" style="margin:0;font-weight:bold;font-size:16px;color:#fff;margin-bottom:20px"></p>
+        <button id="dialogBtn" style="align-self:center;padding:0;background:none;border:none;cursor:pointer;width:120px;height:50px;position:relative"><img src="Assets/Images/button.png" alt="OK" onerror="this.src='Assets/Images/error.svg'" style="width:100%;height:100%;cursor:pointer"><span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-weight:bold;pointer-events:none">OK</span></button>
       </div>
     </div>
   </div>
@@ -213,20 +225,54 @@
     const bgsGrid = document.getElementById('bgsGrid');
     const storeBack = document.getElementById('storeBack');
     const settingsBack = document.getElementById('settingsBack');
+    const promoInput = document.getElementById('promoInput');
+    const promoBtn = document.getElementById('promoBtn');
+    const promoMsg = document.getElementById('promoMsg');
+    const customDialog = document.getElementById('customDialog');
+    const dialogMsg = document.getElementById('dialogMsg');
+    const dialogBtn = document.getElementById('dialogBtn');
     const qualitySel = document.getElementById('quality');
     const musicToggle = document.getElementById('musicToggle');
     const darkModeToggle = document.getElementById('darkModeToggle');
     const languageSel = document.getElementById('language');
     const reportBtn = document.getElementById('reportBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const githubBtn = document.getElementById('githubBtn');
     const bgMusic = document.getElementById('bgMusic');
 
     const playerFiles = [
       'Assets/Images/Players/player.gif','Assets/Images/Players/player2.gif',
-      'Assets/Images/Players/6N/player3.webp','Assets/Images/Players/6N/player4.webp','Assets/Images/Players/6N/player5.webp','Assets/Images/Players/6N/player6.webp','Assets/Images/Players/6N/player7.webp','Assets/Images/Players/6N/player8.webp','Assets/Images/Players/6N/player9.webp','Assets/Images/Players/6N/player10.webp','Assets/Images/Players/6N/player11.webp','Assets/Images/Players/6N/player12.webp','Assets/Images/Players/6N/player13.webp','Assets/Images/Players/6N/player14.webp','Assets/Images/Players/6N/player15.webp','Assets/Images/Players/6N/player16.webp','Assets/Images/Players/6N/player17.webp','Assets/Images/Players/6N/player18.webp','Assets/Images/Players/6N/player19.webp','Assets/Images/Players/6N/player20.webp',
       'Assets/Images/Players/player21.png','Assets/Images/Players/player22.png','Assets/Images/Players/player23.png','Assets/Images/Players/player24.png','Assets/Images/Players/player25.png','Assets/Images/Players/player26.png','Assets/Images/Players/player27.png','Assets/Images/Players/player28.png','Assets/Images/Players/player29.png','Assets/Images/Players/player30.png','Assets/Images/Players/player31.png','Assets/Images/Players/player32.png'
     ];
     const bgFiles = ['Assets/Images/background.png','Assets/Images/background2.png','Assets/Images/background3.png','Assets/Images/background4.png','Assets/Images/background5.png','Assets/Images/background6.png','Assets/Images/background7.png','Assets/Images/background8.png','Assets/Images/background9.png','Assets/Images/background10.png'];
     const languages = ['English','Arabic','Turkish','Spanish','Japanese','French','Italian','Hindi','Bengali','German','Russian','Mandarin Chinese'];
+
+    const PROMO_CODES = { 
+      '6NISBESTMARYCAT': [
+        'Assets/Images/Players/6N/player3.webp','Assets/Images/Players/6N/player4.webp','Assets/Images/Players/6N/player5.webp','Assets/Images/Players/6N/player6.webp','Assets/Images/Players/6N/player7.webp','Assets/Images/Players/6N/player8.webp','Assets/Images/Players/6N/player9.webp','Assets/Images/Players/6N/player10.webp','Assets/Images/Players/6N/player11.webp','Assets/Images/Players/6N/player12.webp','Assets/Images/Players/6N/player13.webp','Assets/Images/Players/6N/player14.webp','Assets/Images/Players/6N/player15.webp','Assets/Images/Players/6N/player16.webp','Assets/Images/Players/6N/player17.webp','Assets/Images/Players/6N/player18.webp','Assets/Images/Players/6N/player19.webp','Assets/Images/Players/6N/player20.webp'
+      ]
+    };
+
+    function showDialog(msg){
+      dialogMsg.textContent = msg;
+      customDialog.classList.remove('hidden');
+    }
+
+    function resetGameData(){
+      localStorage.clear();
+      coins = 0;
+      purchases = [];
+      selectedPlayer = 'Assets/Images/Players/player.gif';
+      selectedBg = 'Assets/Images/background.png';
+      bestScore = 0;
+      settings = {quality:'medium', music:true, darkMode:false, language:'english'};
+      localStorage.setItem(KEYS.selPlayer, selectedPlayer);
+      localStorage.setItem(KEYS.selBg, selectedBg);
+      document.documentElement.classList.remove('dark-mode');
+      darkModeToggle.checked = false;
+      updateWallet();
+      showDialog('Game data has been reset!');
+    }
 
     function loadImage(src){
       const img = new Image(); img._ready = false;
@@ -364,7 +410,18 @@
       playersGrid.innerHTML=''; 
       bgsGrid.innerHTML=''; 
       updateWallet();
-      playerFiles.forEach((src, i)=>{
+      
+      // Create a list of all available players (default + unlocked 6N)
+      let availablePlayers = [...playerFiles];
+      const unlockedSixN = ['Assets/Images/Players/6N/player3.webp','Assets/Images/Players/6N/player4.webp','Assets/Images/Players/6N/player5.webp','Assets/Images/Players/6N/player6.webp','Assets/Images/Players/6N/player7.webp','Assets/Images/Players/6N/player8.webp','Assets/Images/Players/6N/player9.webp','Assets/Images/Players/6N/player10.webp','Assets/Images/Players/6N/player11.webp','Assets/Images/Players/6N/player12.webp','Assets/Images/Players/6N/player13.webp','Assets/Images/Players/6N/player14.webp','Assets/Images/Players/6N/player15.webp','Assets/Images/Players/6N/player16.webp','Assets/Images/Players/6N/player17.webp','Assets/Images/Players/6N/player18.webp','Assets/Images/Players/6N/player19.webp','Assets/Images/Players/6N/player20.webp'];
+      
+      unlockedSixN.forEach(sixNPlayer => {
+        if(purchases.includes(sixNPlayer) && !availablePlayers.includes(sixNPlayer)){
+          availablePlayers.splice(2, 0, sixNPlayer);
+        }
+      });
+      
+      availablePlayers.forEach((src, i)=>{
         const it = document.createElement('div'); 
         it.className='item'; 
         const img = document.createElement('img'); 
@@ -373,13 +430,13 @@
         it.appendChild(img); 
         const lbl = document.createElement('label'); 
         const owned = purchases.includes(src) || i===0;
-        lbl.textContent = (i===0? 'Default' : (owned? 'Owned' : '30 💰')); 
+        lbl.textContent = (i===0? 'Default' : (owned? 'Owned' : '10 💰')); 
         it.appendChild(lbl);
         if(localStorage.getItem(KEYS.selPlayer) === src) it.classList.add('selected');
         it.addEventListener('click', ()=>{
           if(!owned){ 
-            if(coins >= 30){ 
-              coins -= 30; 
+            if(coins >= 10){ 
+              coins -= 10; 
               purchases.push(src); 
               write(KEYS.coins, coins); 
               write(KEYS.purchases, purchases); 
@@ -387,7 +444,7 @@
               updateWallet(); 
               coinsCountEl.textContent=coins;
             } else { 
-              alert('Not enough coins! You need 30 coins to buy a player.') 
+              showDialog('Not enough coins! You need 10 coins to buy a player.') 
             } 
           } else { 
             localStorage.setItem(KEYS.selPlayer, src); 
@@ -435,11 +492,60 @@
       }) 
     }
 
+    function redeemPromo(){
+      const code = promoInput.value.trim().toUpperCase();
+      promoMsg.textContent='';
+      if(!code){ promoMsg.textContent='Please enter a code'; promoMsg.style.color='#666'; return; }
+      if(code in PROMO_CODES){
+        const playerList = PROMO_CODES[code];
+        if(Array.isArray(playerList)){
+          let alreadyOwned = 0;
+          playerList.forEach(playerSrc => {
+            if(!purchases.includes(playerSrc)){
+              purchases.push(playerSrc);
+            } else {
+              alreadyOwned++;
+            }
+          });
+          write(KEYS.purchases, purchases);
+          if(alreadyOwned === playerList.length){
+            promoMsg.textContent='✓ Already redeemed!'; 
+            promoMsg.style.color='#888';
+          } else {
+            promoMsg.textContent='✓ All 6N players unlocked!';
+            promoMsg.style.color='#0a0';
+            promoInput.value='';
+          }
+          openStore();
+        } else {
+          const playerSrc = playerList;
+          if(purchases.includes(playerSrc)){ promoMsg.textContent='✓ Already redeemed!'; promoMsg.style.color='#888'; }
+          else {
+            purchases.push(playerSrc);
+            write(KEYS.purchases, purchases);
+            promoMsg.textContent='✓ Player unlocked!';
+            promoMsg.style.color='#0a0';
+            promoInput.value='';
+            openStore();
+          }
+        }
+      } else {
+        promoMsg.textContent='✗ Invalid code';
+        promoMsg.style.color='#f44';
+      }
+    }
+
+    promoBtn.addEventListener('click', redeemPromo);
+    promoInput.addEventListener('keypress', (e)=>{ if(e.key==='Enter') redeemPromo() });
+    dialogBtn.addEventListener('click', ()=>{ customDialog.classList.add('hidden') });
+    resetBtn.addEventListener('click', ()=>{ resetGameData() });
+
     qualitySel.addEventListener('change', ()=>{ settings.quality = qualitySel.value; write(KEYS.settings, settings) });
     musicToggle.addEventListener('change', ()=>{ settings.music = musicToggle.checked; write(KEYS.settings, settings); if(settings.music) bgMusic.play().catch(()=>{}); else bgMusic.pause() });
     darkModeToggle.addEventListener('change', ()=>{ settings.darkMode = darkModeToggle.checked; write(KEYS.settings, settings); if(darkModeToggle.checked) document.documentElement.classList.add('dark-mode'); else document.documentElement.classList.remove('dark-mode'); });
     languageSel.addEventListener('change', ()=>{ settings.language = languageSel.value; write(KEYS.settings, settings) });
     reportBtn.addEventListener('click', ()=>{ window.location.href = 'mailto:wadifayad@gmail.com?subject=Flappy%20Nyan%20-%20Bug%20Report'; });
+    githubBtn.addEventListener('click', ()=>{ window.open('https://github.com/fayadgamer13/flappy_nyan.github.io', '_blank'); });
 
     if(settings.music){ bgMusic.play().catch(()=>{}); musicToggle.checked=true } else musicToggle.checked=false
 
