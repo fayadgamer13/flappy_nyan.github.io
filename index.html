@@ -10,7 +10,7 @@
       src:url('Assets/Fonts/font.otf') format('opentype');
     }
     :root{--accent:#ffcc00;--muted:#cfcfcf}
-    html,body{height:100%;margin:0;font-family:'CustomFont',Arial,Helvetica,sans-serif;background:#1a1a2e;cursor:url('Assets/Images/cursor.cur'),auto}
+    html,body{height:100%;margin:0;font-family:'CustomFont',Arial,Helvetica,sans-serif;background:#1a1a2e;cursor:url('cursor.cur'),auto}
     *{box-sizing:border-box}
     #app{position:relative;height:100vh;overflow:hidden;max-width:100%;max-height:100vh}
     canvas{display:block;background:transparent;width:100%;height:100%;max-width:100%;max-height:100vh}
@@ -21,7 +21,7 @@
     .hidden{display:none!important}
     
     .title{position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:10}
-    .title img{height:80px;object-fit:contain}
+    .title img{height:0px;object-fit:contain}
     .centerPlay{display:flex;align-items:center;justify-content:center}
     .icon{width:100px;height:100px;cursor:pointer;transition:transform 0.2s;user-select:none}
     .icon:hover{transform:scale(1.1)}
@@ -117,7 +117,7 @@
     <!-- Try Again Modal -->
     <div id="tryAgain" class="modal hidden">
       <div style="position:relative;width:350px;background:url('Assets/Images/dialog.png');background-size:contain;background-repeat:no-repeat;background-position:center;padding:60px 30px 30px 30px;border-radius:16px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);min-height:280px;display:flex;flex-direction:column;justify-content:center">
-        <h2 style="margin:0 0 20px 0;font-size:24px;color:#fff">Game Over</h2>
+        <h2 style="margin:0 0 20px 0;font-size:24px;color:#ff0000">Game Over</h2>
         <div style="margin-bottom:20px;font-size:16px;color:#fff">
           <div style="margin:12px 0">Score: <strong style="color:#ffcc00;font-size:20px" id="lastScore">0</strong></div>
           <div style="margin:12px 0">Best: <strong style="color:#ffcc00;font-size:20px" id="bestScore">0</strong></div>
@@ -183,7 +183,7 @@
       </div>
     </div>
   </div>
-
+  
   <audio id="bgMusic" loop src="Assets/Audios/music.mp3"></audio>
 
   <script>
@@ -248,8 +248,14 @@
     const languages = ['English','Arabic','Turkish','Spanish','Japanese','French','Italian','Hindi','Bengali','German','Russian','Mandarin Chinese'];
 
     const PROMO_CODES = { 
+      'MARYAMISBESTNYANSIGNED': [
+        'Assets/Images/Players/player4.webp'
+      ],
+      'Rinchenisthebest': [
+        'Assets/Images/Players/6N/player12.webp'
+      ],
       '6NTHEBEST23012013': [
-        'Assets/Images/Players/6N/player3.webp','Assets/Images/Players/6N/player4.webp','Assets/Images/Players/6N/player5.webp','Assets/Images/Players/6N/player6.webp','Assets/Images/Players/6N/player7.webp','Assets/Images/Players/6N/player8.webp','Assets/Images/Players/6N/player9.webp','Assets/Images/Players/6N/player10.webp','Assets/Images/Players/6N/player11.webp','Assets/Images/Players/6N/player12.webp','Assets/Images/Players/6N/player13.webp','Assets/Images/Players/6N/player14.webp','Assets/Images/Players/6N/player15.webp','Assets/Images/Players/6N/player16.webp','Assets/Images/Players/6N/player17.webp','Assets/Images/Players/6N/player18.webp','Assets/Images/Players/6N/player19.webp','Assets/Images/Players/6N/player20.webp'
+        'Assets/Images/Players/6N/player3.webp','Assets/Images/Players/6N/player5.webp','Assets/Images/Players/6N/player6.webp','Assets/Images/Players/6N/player7.webp','Assets/Images/Players/6N/player8.webp','Assets/Images/Players/6N/player9.webp','Assets/Images/Players/6N/player10.webp','Assets/Images/Players/6N/player11.webp','Assets/Images/Players/6N/player13.webp','Assets/Images/Players/6N/player14.webp','Assets/Images/Players/6N/player15.webp','Assets/Images/Players/6N/player16.webp','Assets/Images/Players/6N/player17.webp','Assets/Images/Players/6N/player18.webp','Assets/Images/Players/6N/player19.webp','Assets/Images/Players/6N/player20.webp'
       ]
     };
 
@@ -566,4 +572,3 @@
   </script>
 </body>
 </html>
-

@@ -20,7 +20,7 @@ Flappy Nyan is a familiar, yet unique, clone of the popular game *Flappy Bird*.
 
 ## 🚧 Reporting Issues and Problems
 
-As the game is currently in **Beta**, your feedback is highly valuable! If you encounter any bugs, visual glitches, or have suggestions, please report them.
+As the game is currently in **Build**, your feedback is highly valuable! If you encounter any bugs, visual glitches, or have suggestions, please report them.
 
 There are two ways to report an issue:
 
@@ -30,9 +30,9 @@ There are two ways to report an issue:
 
 ---
 
-## 💡 Note on Beta Status
+## 💡 Note on Game Buliding Status
 
-Please be aware that **Flappy Nyan is currently in Beta**.
+Please be aware that **Flappy Nyan is currently in Bulid**.
 
 You may occasionally encounter **pink and black glitches**. This visual artifact usually indicates a texture that is either:
 
@@ -40,4 +40,3 @@ You may occasionally encounter **pink and black glitches**. This visual artifact
 * **Failing to Load:** A temporary loading error has occurred.
 
 Thank you for playing and helping to make this game better!
-
