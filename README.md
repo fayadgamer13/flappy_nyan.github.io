@@ -24,6 +24,8 @@ You can also play **Flappy Nyan** on your mobile **device**, such as Android/iOS
 
 I am developing **Flappy Nyan** for mobile and it will come out on Android (**December 18, 2025**). For iOS, it will take a lot of time because you need a **MacBook** or **iMac**. Don't worry, I will find a **solution** to that in the future (**late 2026**).
 
+Bug: while playing on mobile you keep on dying when past the pipes
+
 **Supported Devices**
 * Android: a device that has Android **5.0** or above (such as Android 7.0, 8.0, 9, 10, 11, 12, 13, 14, 15, 16).
 * iOS: iOS **10** or above (such as iOS 11, 12, 13, 14, 15, 16, 17, 18, 26).
@@ -59,3 +61,4 @@ You may occasionally encounter **pink and black glitches**. This visual artifact
 * **Failing to Load:** A temporary loading error has occurred.
 
 Thank you for playing and helping to make this game better!
+
