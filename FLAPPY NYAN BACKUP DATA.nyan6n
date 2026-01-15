@@ -1,0 +1,8 @@
+Flappy Nyan Backup Data
+{
+ coins:<player's coin>
+ {
+  BestScore:<Player's Best Score>
+   {
+     ListsofBoughtPlayers:<an avatar what the player boughted>
+      {
