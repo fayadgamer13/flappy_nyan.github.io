@@ -62,3 +62,6 @@ You may occasionally encounter **pink and black glitches**. This visual artifact
 
 Thank you for playing and helping to make this game better!
 
+<img width="192" height="192" alt="image" src="https://github.com/user-attachments/assets/8728c8a4-e648-430b-8f3a-ba349bec3b1e" />
+
+
