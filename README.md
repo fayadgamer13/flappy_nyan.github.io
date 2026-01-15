@@ -15,6 +15,7 @@ Flappy Nyan is a familiar, yet unique, clone of the popular game *Flappy Bird*.
 * **Controls:** Tap or click anywhere on the screen to make the player (Nyan Cat) jump.
 * **Game Over:** You lose if the player falls to the ground or touches any of the pipes.
 * **Special Feature:** Score **10 points** to unlock the option to **buy a new player**!
+* **Game Setup** you can also setup the game and also we added a lost space game mode 
 
 ---
 
@@ -63,5 +64,6 @@ You may occasionally encounter **pink and black glitches**. This visual artifact
 Thank you for playing and helping to make this game better!
 
 <img width="192" height="192" alt="image" src="https://github.com/user-attachments/assets/8728c8a4-e648-430b-8f3a-ba349bec3b1e" />
+
 
 
